@@ -84,11 +84,11 @@ def valid(wheels, hash_map, reflector_map):
     if wheels[2] not in W3_VALUES:
         raise JSONFileException("Invalid wheel3: must be 0, 5, or 10")
 
-    if len(hash_map) != 26 or set(hash_map.values()) != set(range(START, END + 1)):
+    if len(hash_map) != 26 or set(hash_map.values()) != set(range(FIRST_LETTER_INDEX, LAST_LETTER_INDEX + 1)):
         raise JSONFileException("Invalid hash map: must map all 26 letters to unique values from 0 to 25")
 
     for char, val in hash_map.items():
-        if not ('a' <= char <= 'z') or not (START <= val <= END):
+        if not ('a' <= char <= 'z') or not (FIRST_LETTER_INDEX <= val <= LAST_LETTER_INDEX):
             raise JSONFileException(f"Invalid hash map entry: {char}:{val}")
 
     for a, b in reflector_map.items():
