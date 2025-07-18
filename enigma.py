@@ -58,22 +58,21 @@ class Enigma:
         self.wheels = list(wheels)
 
     def encrypt(self, message):
-     result = ""
-     original_wheels = self.wheels.copy()
-     encryption_count = 0
+        result = ""
+        origin = self.wheels.copy()
+        num_of_encryptions = 0
 
-     for i, char in enumerate(message):
-        encrypted_char = self.encrypt_letter(char)
-        result += encrypted_char
+        for i, c in enumerate(message):
+            result += self.encrypt_letter(c)
 
-        # Only count if the character was actually encrypted (i.e., changed)
-        if i < len(result) and message[i] != result[i]:
-            encryption_count += 1
+            # Check if the character is actually encrypted (avoid IndexError)
+            if i < len(result) and message[i] != result[i]:
+                num_of_encryptions += 1
 
-        self.step(encryption_count)
+            self.step(num_of_encryptions)
 
-     self.setWheels(original_wheels)
-     return result
+        self.setWheels(origin)
+        return result
 
     def encrypt_using_file(self, input_path):
         try:
@@ -156,7 +155,6 @@ def main():
 
     except (ValueError, IndexError):
         print("Usage: python3 enigma.py -c <config_file> -i <input_file> -o <output_file>", file=sys.stderr)
-        sys.exit(1)
     except Exception:
         print("The enigma script has encountered an error", file=sys.stderr)
         sys.exit(1)
