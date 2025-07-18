@@ -19,22 +19,30 @@ class Enigma:
         self.wheels = list(wheels)  # Copy to avoid mutating external state
         self.reflector_map = reflector_map
 
-    def encrypt(self, message):
-     result = []
-     original_wheels = self.wheels.copy()
-     encrypted_count = 0
+    def encrypt_letter(self, c):
+     if not ('a' <= c <= 'z'):
+        return c
 
-     for ch in message:
-         if 'a' <= ch <= 'z':
-             encrypted_count += 1
-             self.step(encrypted_count)  # ✅ Step before encryption
+     w1, w2, w3 = self.wheels
+     num = ((2 * w1) - w2 + w3) % 26
 
-         encrypted_ch = self.encrypt_letter(ch)
-         result.append(encrypted_ch)
+     index = self.hash_map[c]
+     index += num if num != 0 else 1
+     index %= ALPHABET_SIZE
 
-     self.set_wheels(original_wheels)
-     return ''.join(result)
+    # Find the intermediate character
+     c1 = next((char for char, val in self.hash_map.items() if val == index), "")
 
+    # Reflect the character
+     c2 = self.reflector_map[c1]
+
+     index = self.hash_map[c2]
+     index -= num if num != 0 else 1
+     index %= 26
+
+    # Final character lookup
+     return next((char for char, val in self.hash_map.items() if val == index), "")
+    
     def step(self, count):
         self.wheels[0] = self.wheels[0] + 1 if self.wheels[0] < W1_MAX else W1_MIN
         self.wheels[1] = self.wheels[1] * 2 if count % 2 == 0 else self.wheels[1] - 1
