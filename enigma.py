@@ -14,6 +14,7 @@ class JSONFileException(Exception):
 class Enigma:
     def __init__(self, hash_map, wheels, reflector_map):
         self.hash_map = hash_map
+        self.reverse_hash_map = {v: k for k, v in hash_map.items()}  # NEW: faster reverse lookup
         self.wheels = wheels
         self.reflector_map = reflector_map
 
@@ -28,15 +29,14 @@ class Enigma:
         index += offset if offset != 0 else 1
         index %= ALPHABET_SIZE
 
-        char1 = next((key for key, val in self.hash_map.items() if val == index), "")
-
+        char1 = self.reverse_hash_map[index]  # FIXED: more reliable than scanning
         reflected = self.reflector_map[char1]
         index = self.hash_map[reflected]
 
         index -= offset if offset != 0 else 1
         index %= ALPHABET_SIZE
 
-        final_char = next((key for key, val in self.hash_map.items() if val == index), "")
+        final_char = self.reverse_hash_map[index]  # FIXED: more reliable than scanning
         return final_char
 
     def step(self, count):
