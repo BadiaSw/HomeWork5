@@ -63,7 +63,8 @@ class Enigma:
             encrypted_ch = self.encrypt_letter(ch)
             result.append(encrypted_ch)
 
-            if 'a' <= ch <= 'z':
+            # Step only if a character was actually encrypted
+            if encrypted_ch != ch:
                 encrypted_count += 1
                 self.step(encrypted_count)
 
