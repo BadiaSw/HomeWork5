@@ -1,5 +1,6 @@
 import json
 import sys
+
 # Constants
 FIRST_LETTER_INDEX = 0
 LAST_LETTER_INDEX = 25
@@ -14,8 +15,8 @@ class JSONFileException(Exception):
 class Enigma:
     def __init__(self, hash_map, wheels, reflector_map):
         self.hash_map = hash_map
-        self.reverse_hash_map = {v: k for k, v in hash_map.items()}  # NEW: faster reverse lookup
-        self.wheels = wheels
+        self.reverse_hash_map = {v: k for k, v in hash_map.items()}
+        self.wheels = list(wheels)  # Copy to avoid mutating external state
         self.reflector_map = reflector_map
 
     def encrypt_letter(self, ch):
@@ -29,24 +30,20 @@ class Enigma:
         index += offset if offset != 0 else 1
         index %= ALPHABET_SIZE
 
-        char1 = self.reverse_hash_map[index]  # FIXED: more reliable than scanning
+        char1 = self.reverse_hash_map[index]
         reflected = self.reflector_map[char1]
         index = self.hash_map[reflected]
 
         index -= offset if offset != 0 else 1
         index %= ALPHABET_SIZE
 
-        final_char = self.reverse_hash_map[index]  # FIXED: more reliable than scanning
+        final_char = self.reverse_hash_map[index]
         return final_char
 
     def step(self, count):
-        # Advance W1
         self.wheels[0] = self.wheels[0] + 1 if self.wheels[0] < W1_MAX else W1_MIN
-
-        # Advance W2
         self.wheels[1] = self.wheels[1] * 2 if count % 2 == 0 else self.wheels[1] - 1
 
-        # Advance W3 based on encryption count
         if count % 10 == 0:
             self.wheels[2] = 10
         elif count % 3 == 0:
@@ -66,41 +63,40 @@ class Enigma:
             encrypted_ch = self.encrypt_letter(ch)
             result.append(encrypted_ch)
 
-            # Count only real encryptions of lowercase letters
             if 'a' <= ch <= 'z':
                 encrypted_count += 1
                 self.step(encrypted_count)
 
         self.set_wheels(original_wheels)
         return ''.join(result)
-    def encrypt_using_file(self, input_path):
-     try:
-        with open(input_path, 'r') as file:
-            return [self.encrypt(line.rstrip('\n')) for line in file]
-     except Exception as e:
-        raise e
 
-    
-def valid(wheels, hash_map, reflector_map):
+    def encrypt_using_file(self, input_path):
+        try:
+            with open(input_path, 'r') as file:
+                return [self.encrypt(line.rstrip('\n')) for line in file]
+        except Exception:
+            print("The enigma script has encountered an error", file=sys.stderr)
+            sys.exit(1)
+
+def is_valid(wheels, hash_map, reflector_map):
     if wheels is None or hash_map is None or reflector_map is None:
-        raise JSONFileException("Invalid JSON file: missing keys")
+        raise JSONFileException("Invalid JSON file")
 
     if not (W1_MIN <= wheels[0] <= W1_MAX):
-        raise JSONFileException("Invalid wheel1: out of range")
-
+        raise JSONFileException("Invalid wheel1")
     if wheels[2] not in W3_VALUES:
-        raise JSONFileException("Invalid wheel3: must be 0, 5, or 10")
+        raise JSONFileException("Invalid wheel3")
 
     if len(hash_map) != 26 or set(hash_map.values()) != set(range(FIRST_LETTER_INDEX, LAST_LETTER_INDEX + 1)):
-        raise JSONFileException("Invalid hash map: must map all 26 letters to unique values from 0 to 25")
+        raise JSONFileException("Invalid hash map")
 
-    for char, val in hash_map.items():
-        if not ('a' <= char <= 'z') or not (FIRST_LETTER_INDEX <= val <= LAST_LETTER_INDEX):
-            raise JSONFileException(f"Invalid hash map entry: {char}:{val}")
+    for c, n in hash_map.items():
+        if not ('a' <= c <= 'z') or not (FIRST_LETTER_INDEX <= n <= LAST_LETTER_INDEX):
+            raise JSONFileException(f"Invalid hash map entry: {c}:{n}")
 
     for a, b in reflector_map.items():
         if not ('a' <= a <= 'z') or not ('a' <= b <= 'z'):
-            raise JSONFileException(f"Invalid reflector map entry: {a}->{b} is not lowercase")
+            raise JSONFileException(f"Invalid reflector map entry: {a}->{b}")
         if a == b:
             raise JSONFileException(f"Invalid reflector map: {a} maps to itself")
         if reflector_map.get(b) != a:
@@ -115,18 +111,17 @@ def load_enigma_from_path(path):
         hash_map = data.get("hash_map")
         reflector_map = data.get("reflector_map")
 
-        valid(wheels, hash_map, reflector_map)
+        is_valid(wheels, hash_map, reflector_map)
         return Enigma(hash_map, wheels, reflector_map)
 
-    except (json.JSONDecodeError, KeyError, TypeError) as e:
-        raise JSONFileException("Error reading from file.") from e
-    
+    except (json.JSONDecodeError, KeyError, TypeError):
+        raise JSONFileException("Error reading from file.")
+
 def main():
     args = sys.argv[1:]
     config_file = input_file = output_file = None
 
     try:
-        # Manual flag parsing to allow any order
         i = 0
         while i < len(args):
             if args[i] == '-c':
@@ -150,14 +145,13 @@ def main():
 
         if output_file:
             with open(output_file, 'w') as f:
-                f.write('\n'.join(encrypted_lines))
+                f.write('\n'.join(encrypted_lines) + '\n')  # ensure trailing newline
         else:
             print('\n'.join(encrypted_lines))
 
     except (ValueError, IndexError):
         print("Usage: python3 enigma.py -c <config_file> -i <input_file> -o <output_file>", file=sys.stderr)
         sys.exit(1)
-
     except Exception:
         print("The enigma script has encountered an error", file=sys.stderr)
         sys.exit(1)
