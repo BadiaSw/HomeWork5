@@ -58,21 +58,22 @@ class Enigma:
         self.wheels = list(wheels)
 
     def encrypt(self, message):
-        result = []
-        original_wheels = self.wheels.copy()
-        encrypted_count = 0
+     result = ""
+     original_wheels = self.wheels.copy()
+     encryption_count = 0
 
-        for ch in message:
-            encrypted_ch = self.encrypt_letter(ch)
-            result.append(encrypted_ch)
+     for i, char in enumerate(message):
+        encrypted_char = self.encrypt_letter(char)
+        result += encrypted_char
 
-            # Step only if a character was actually encrypted
-            if encrypted_ch != ch:
-                encrypted_count += 1
-                self.step(encrypted_count)
+        # Only count if the character was actually encrypted (i.e., changed)
+        if i < len(result) and message[i] != result[i]:
+            encryption_count += 1
 
-        self.set_wheels(original_wheels)
-        return ''.join(result)
+        self.step(encryption_count)
+
+     self.setWheels(original_wheels)
+     return result
 
     def encrypt_using_file(self, input_path):
         try:
