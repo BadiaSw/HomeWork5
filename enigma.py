@@ -16,33 +16,28 @@ class Enigma:
     def __init__(self, hash_map, wheels, reflector_map):
         self.hash_map = hash_map
         self.reverse_hash_map = {v: k for k, v in hash_map.items()}
-        self.wheels = list(wheels)  # Copy to avoid mutating external state
+        self.wheels = list(wheels)
         self.reflector_map = reflector_map
 
-    def encrypt_letter(self, c):
-     if not ('a' <= c <= 'z'):
-        return c
+    def encrypt_letter(self, ch):
+        if not ('a' <= ch <= 'z'):
+            return ch
 
-     w1, w2, w3 = self.wheels
-     num = ((2 * w1) - w2 + w3) % 26
+        w1, w2, w3 = self.wheels
+        offset = ((2 * w1) - w2 + w3) % ALPHABET_SIZE
+        if offset == 0:
+            offset = 1
 
-     index = self.hash_map[c]
-     index += num if num != 0 else 1
-     index %= ALPHABET_SIZE
+        index = self.hash_map[ch]
+        index = (index + offset) % ALPHABET_SIZE
+        c1 = self.reverse_hash_map[index]
 
-    # Find the intermediate character
-     c1 = next((char for char, val in self.hash_map.items() if val == index), "")
+        c2 = self.reflector_map[c1]
+        index = self.hash_map[c2]
+        index = (index - offset) % ALPHABET_SIZE
 
-    # Reflect the character
-     c2 = self.reflector_map[c1]
+        return self.reverse_hash_map[index]
 
-     index = self.hash_map[c2]
-     index -= num if num != 0 else 1
-     index %= 26
-
-    # Final character lookup
-     return next((char for char, val in self.hash_map.items() if val == index), "")
-    
     def step(self, count):
         self.wheels[0] = self.wheels[0] + 1 if self.wheels[0] < W1_MAX else W1_MIN
         self.wheels[1] = self.wheels[1] * 2 if count % 2 == 0 else self.wheels[1] - 1
@@ -58,19 +53,20 @@ class Enigma:
         self.wheels = list(wheels)
 
     def encrypt(self, message):
-     result = ""
-     original_wheels = self.wheels.copy()
-     num_of_encryptions = 0
+        result = ""
+        original_wheels = self.wheels.copy()
+        num_of_encryptions = 0
 
-     for c in message:
-        if 'a' <= c <= 'z':
-            num_of_encryptions += 1
-            self.step(num_of_encryptions)
+        for ch in message:
+            encrypted = self.encrypt_letter(ch)
+            result += encrypted
 
-        result += self.encrypt_letter(c)
+            if 'a' <= ch <= 'z':
+                num_of_encryptions += 1
+                self.step(num_of_encryptions)
 
-     self.set_wheels(original_wheels)
-     return result
+        self.set_wheels(original_wheels)
+        return result
 
     def encrypt_using_file(self, input_path):
         try:
@@ -147,12 +143,13 @@ def main():
 
         if output_file:
             with open(output_file, 'w') as f:
-                f.write('\n'.join(encrypted_lines) + '\n')  # ensure trailing newline
+                f.write('\n'.join(encrypted_lines) + '\n')
         else:
             print('\n'.join(encrypted_lines))
 
     except (ValueError, IndexError):
         print("Usage: python3 enigma.py -c <config_file> -i <input_file> -o <output_file>", file=sys.stderr)
+        sys.exit(1)
     except Exception:
         print("The enigma script has encountered an error", file=sys.stderr)
         sys.exit(1)
