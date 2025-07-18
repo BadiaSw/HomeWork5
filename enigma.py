@@ -73,6 +73,13 @@ class Enigma:
 
         self.set_wheels(original_wheels)
         return ''.join(result)
+    def encrypt_using_file(self, input_path):
+     try:
+        with open(input_path, 'r') as file:
+            return [self.encrypt(line.rstrip('\n')) for line in file]
+     except Exception as e:
+        raise e
+
     
 def valid(wheels, hash_map, reflector_map):
     if wheels is None or hash_map is None or reflector_map is None:
