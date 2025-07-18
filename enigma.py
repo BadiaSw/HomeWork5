@@ -58,21 +58,19 @@ class Enigma:
         self.wheels = list(wheels)
 
     def encrypt(self, message):
-        result = ""
-        origin = self.wheels.copy()
-        num_of_encryptions = 0
+     result = ""
+     original_wheels = self.wheels.copy()
+     num_of_encryptions = 0
 
-        for i, c in enumerate(message):
-            result += self.encrypt_letter(c)
-
-            # Check if the character is actually encrypted (avoid IndexError)
-            if i < len(result) and message[i] != result[i]:
-                num_of_encryptions += 1
-
+     for c in message:
+        if 'a' <= c <= 'z':
+            num_of_encryptions += 1
             self.step(num_of_encryptions)
 
-        self.setWheels(origin)
-        return result
+        result += self.encrypt_letter(c)
+
+     self.set_wheels(original_wheels)
+     return result
 
     def encrypt_using_file(self, input_path):
         try:
