@@ -27,16 +27,14 @@ class Enigma:
      if offset == 0:
         offset = 1
 
-    # Forward shift using offset
      i = self.hash_map[ch]
      i = (i + offset) % ALPHABET_SIZE
      c1 = next((key for key, value in self.hash_map.items() if value == i), "")
 
-    # Reflection
+    
      c2 = self.reflector_map[c1]
      i = self.hash_map[c2]
 
-    # Reverse shift using offset
      i = (i - offset) % ALPHABET_SIZE
      return next((key for key, value in self.hash_map.items() if value == i), "")
 
@@ -59,15 +57,14 @@ class Enigma:
     def encrypt(self, message):
         result = ""
         original_wheels = self.wheels.copy()
-        num_of_encryptions = 0
+        number_of_encryptions = 0
 
         for ch in message:
             encrypted = self.encrypt_letter(ch)
             result += encrypted
             if  ch != encrypted:
-                
-                num_of_encryptions += 1
-            self.step(num_of_encryptions)
+                number_of_encryptions += 1
+            self.step(number_of_encryptions)
 
 
 
@@ -77,7 +74,7 @@ class Enigma:
     def encrypt_using_file(self, input_path):
         try:
             with open(input_path, 'r') as file:
-                return [self.encrypt(line.rstrip('\n')) for line in file]
+                return [self.encrypt(line.removesuffix('\n')) for line in file]
         except Exception:
             print("The enigma script has encountered an error", file=sys.stderr)
             sys.exit(1)
@@ -91,7 +88,7 @@ def is_valid(wheels, hash_map, reflector_map):
     if wheels[2] not in W3_VALUES:
         raise JSONFileException("Invalid wheel3")
 
-    if len(hash_map) != 26 or set(hash_map.values()) != set(range(FIRST_LETTER_INDEX, LAST_LETTER_INDEX + 1)):
+    if len(hash_map) != ALPHABET_SIZE or set(hash_map.values()) != set(range(FIRST_LETTER_INDEX, LAST_LETTER_INDEX + 1)):
         raise JSONFileException("Invalid hash map")
 
     for c, n in hash_map.items():
