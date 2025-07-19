@@ -15,28 +15,31 @@ class JSONFileException(Exception):
 class Enigma:
     def __init__(self, hash_map, wheels, reflector_map):
         self.hash_map = hash_map
-        self.reverse_hash_map = {v: k for k, v in hash_map.items()}
         self.wheels = list(wheels)
         self.reflector_map = reflector_map
 
     def encrypt_letter(self, ch):
-        if not ('a' <= ch <= 'z'):
-            return ch
+     if not ('a' <= ch <= 'z'):
+        return ch
 
-        w1, w2, w3 = self.wheels
-        offset = ((2 * w1) - w2 + w3) % ALPHABET_SIZE
-        if offset == 0:
-            offset = 1
+     w1, w2, w3 = self.wheels
+     offset = ((2 * w1) - w2 + w3) % ALPHABET_SIZE
+     if offset == 0:
+        offset = 1
 
-        index = self.hash_map[ch]
-        index = (index + offset) % ALPHABET_SIZE
-        c1 = self.reverse_hash_map[index]
+    # Forward shift using offset
+     i = self.hash_map[ch]
+     i = (i + offset) % ALPHABET_SIZE
+     c1 = self.reverse_hash_map[i]
 
-        c2 = self.reflector_map[c1]
-        index = self.hash_map[c2]
-        index = (index - offset) % ALPHABET_SIZE
+    # Reflection
+     c2 = self.reflector_map[c1]
+     i = self.hash_map[c2]
 
-        return self.reverse_hash_map[index]
+    # Reverse shift using offset
+     i = (i - offset) % ALPHABET_SIZE
+     return self.reverse_hash_map[i]
+ 
 
     def step(self, count):
         self.wheels[0] = self.wheels[0] + 1 if self.wheels[0] < W1_MAX else W1_MIN
