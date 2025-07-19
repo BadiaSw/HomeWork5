@@ -30,7 +30,7 @@ class Enigma:
     # Forward shift using offset
      i = self.hash_map[ch]
      i = (i + offset) % ALPHABET_SIZE
-     c1 = self.reverse_hash_map[i]
+     c1 = next((key for key, value in self.hash_map.items() if value == i), "")
 
     # Reflection
      c2 = self.reflector_map[c1]
@@ -38,7 +38,8 @@ class Enigma:
 
     # Reverse shift using offset
      i = (i - offset) % ALPHABET_SIZE
-     return self.reverse_hash_map[i]
+     return next((key for key, value in self.hash_map.items() if value == i), "")
+
  
 
     def step(self, count):
