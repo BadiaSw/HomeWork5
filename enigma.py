@@ -65,7 +65,8 @@ class Enigma:
             encrypted = self.encrypt_letter(ch)
             result += encrypted
 
-            if 'a' <= ch <= 'z':
+            if 'a' <= ch <= 'z' and ch != encrypted:
+
                 num_of_encryptions += 1
                 self.step(num_of_encryptions)
 
