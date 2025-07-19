@@ -64,11 +64,10 @@ class Enigma:
         for ch in message:
             encrypted = self.encrypt_letter(ch)
             if 'a' <= ch <= 'z' and ch != encrypted:
-
+                result += encrypted
                 num_of_encryptions += 1
-                self.step(num_of_encryptions)
+            self.step(num_of_encryptions)
 
-            result += encrypted
 
 
         self.set_wheels(original_wheels)
